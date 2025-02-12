@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: infra/development/docker/gateway.Dockerfile
+    volumes:
+      - .:/app
+      - go_mod_cache:/go/pkg/mod
+    ports:
+      - "8080:8080"
+    environment:
+      - GO_ENV=development
+      - PORT=8080
+    depends_on:
+      - orders
+      - payments
+
+  orders:
+    build:
+      context: .
+      dockerfile: infra/development/docker/orders.Dockerfile
+    volumes:
+      - .:/app
+      - go_mod_cache:/go/pkg/mod
+    ports:
+      - "2000:2000"
+    environment:
+      - GO_ENV=development
+    depends_on:
+      - rabbit-mq
+
+  payments:
+    build:
+      context: .
+      dockerfile: infra/development/docker/payments.Dockerfile
+    volumes:
+      - .:/app
+      - go_mod_cache:/go/pkg/mod
+    ports:
+      - "5672"
+    environment:
+      - GO_ENV=development
+    depends_on:
+      - rabbit-mq
+
+  rabbit-mq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+volumes:
+  go_mod_cache:
+  rabbitmq_data:
+# docker compose up -> to run the file
+# docker compose up --build -> to build
+# docker compose watch -> to watch for changes

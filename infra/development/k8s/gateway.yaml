@@ -1,0 +1,51 @@
+# gateway-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: go-kubernetes-gateway:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GO_ENV
+              value: "development"
+            - name: PORT
+              value: "8080"
+      # Add volume if you need persitant (database, caching etc.)
+      #     volumeMounts:
+      #       - name: app-volume
+      #         mountPath: /app
+      #       - name: go-mod-cache
+      #         mountPath: /go/pkg/mod
+      # volumes:
+      #   - name: app-volume
+      #     hostPath:
+      #       path: /app
+      #   - name: go-mod-cache
+      #     hostPath:
+      #       path: /go/pkg/mod
+---
+# gateway-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: gateway
