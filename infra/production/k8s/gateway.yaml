@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: europe-west2-docker.pkg.dev/{{PROJECT_ID}}/go-k8-tutorial/gateway
+          image: {REGION}-docker.pkg.dev/{PROJECT_ID}/{REGISTRY}/gateway
           ports:
             - containerPort: 8080
           env:

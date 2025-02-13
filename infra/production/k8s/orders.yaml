@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: orders
-          image: europe-west2-docker.pkg.dev/{{PROJECT_ID}}/go-k8-tutorial/orders
+          image: {REGION}-docker.pkg.dev/{PROJECT_ID}/{REGISTRY}/orders
           ports:
             - containerPort: 2000
           env:
