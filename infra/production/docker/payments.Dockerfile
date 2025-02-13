@@ -1,4 +1,4 @@
-FROM golang:1.23 AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ COPY . .
 
 WORKDIR /app/payments
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o gateway
+RUN CGO_ENABLED=0 GOOS=linux go build -o payments
 
 FROM alpine:latest
 

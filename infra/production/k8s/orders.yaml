@@ -1,0 +1,51 @@
+# orders-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orders
+  template:
+    metadata:
+      labels:
+        app: orders
+    spec:
+      containers:
+        - name: orders
+          image: europe-west2-docker.pkg.dev/{{PROJECT_ID}}/go-k8-tutorial/orders
+          ports:
+            - containerPort: 2000
+          env:
+            - name: GO_ENV
+              value: "development"
+      # Add volume if you need persitant (database, caching etc.)
+      #     volumeMounts:
+      #       - name: app-volume
+      #         mountPath: /app
+      #       - name: go-mod-cache
+      #         mountPath: /go/pkg/mod
+      # volumes:
+      #   - name: app-volume
+      #     hostPath:
+      #       path: /app
+      #   - name: go-mod-cache
+      #     hostPath:
+      #       path: /go/pkg/mod
+---
+# orders-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders
+spec:
+  selector:
+    app: orders
+  ports:
+    - port: 2000
+      name: grpc
+      targetPort: 2000
+  # Use ClusterIP when you don’t need to expose your service to the outside world
+  type: ClusterIP

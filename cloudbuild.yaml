@@ -1,0 +1,87 @@
+steps:
+  # Build API Gateway 
+  - id: docker-builder-gateway
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "{REGION}-docker.pkg.dev/{PROJECT_ID}/go-k8-demo-registry/gateway:latest --platform linux/amd64",
+        "-f",
+        "infra/production/docker/gateway.Dockerfile",
+        ".",
+      ]
+    waitFor: ["-"]
+
+  # Build Orders Service 
+  - id: docker-builder-orders
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "{REGION}-docker.pkg.dev/{PROJECT_ID}/go-k8-demo-registry/orders:latest --platform linux/amd64",
+        "-f",
+        "infra/production/docker/orders.Dockerfile",
+        ".",
+      ]
+    waitFor: ["-"]
+
+  # Build payments Service 
+  - id: docker-builder-payments
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "{REGION}-docker.pkg.dev/{PROJECT_ID}/go-k8-demo-registry/payments:latest --platform linux/amd64",
+        "-f",
+        "infra/production/docker/payments.Dockerfile",
+        ".",
+      ]
+    waitFor: ["-"]
+
+  # Push images (in parallel)
+  - name: "gcr.io/cloud-builders/docker"
+    id: push-gateway-service
+    args:
+      [
+        "push",
+        "{REGION}-docker.pkg.dev/{PROJECT_ID}/go-k8-demo-registry/gateway:latest",
+      ]
+    waitFor: ["docker-builder-gateway"]
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: push-orders-service
+    args:
+      [
+        "push",
+        "{REGION}-docker.pkg.dev/{PROJECT_ID}/go-k8-demo-registry/orders:latest",
+      ]
+    waitFor: ["docker-builder-orders"]
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: push-payments-service
+    args:
+      [
+        "push",
+        "{REGION}-docker.pkg.dev/{PROJECT_ID}/go-k8-demo-registry/payments:latest",
+      ]
+    waitFor: ["docker-builder-payments"]
+
+  # Update kubernetes manifests (after all pushes complete)
+  - id: gke-deploy
+    name: "gcr.io/cloud-builders/gke-deploy"
+    args:
+      - run
+      - --filename=infra/production/k8s
+      - --location={REGION}
+      - --cluster=ride-sharing-cluster
+    waitFor: ["push-gateway-service", "push-orders-service", ""push-payments-service""]
+
+images:
+  - "{REGION}-docker.pkg.dev/{PROJECT_ID}/go-k8-demo-registry/api-gateway:latest"
+  - "{REGION}-docker.pkg.dev/{PROJECT_ID}/go-k8-demo-registry/driver-service:latest"
+  - "{REGION}-docker.pkg.dev/{PROJECT_ID}/go-k8-demo-registry/driver-service:latest"
+
+timeout: 1800s # 30 minutes
